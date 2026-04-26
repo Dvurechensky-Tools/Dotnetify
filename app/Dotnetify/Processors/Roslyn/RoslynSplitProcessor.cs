@@ -52,7 +52,7 @@ namespace Dotnetify.Processors.Roslyn
             _controller = new ControllerLogic(config, models);
             _model = new ModelLogic(config);
 
-            Process(root, Path.Combine(context.OutputPath, "GeneratedApi"));
+            Process(root, Path.Combine(context.OutputPath, context.ProjectName));
 
             return Task.CompletedTask;
         }

@@ -59,7 +59,7 @@ namespace Dotnetify.Processors.Roslyn.Core
 
             foreach (var group in grouped)
             {
-                var className = RoslynUtils.Capitalize(group.Key) + "Controller";
+                var className = ToSafeClassName(group.Key) + "Controller";
 
                 var writer = new StringWriter();
 
@@ -97,6 +97,35 @@ namespace Dotnetify.Processors.Roslyn.Core
                 var formatted = RoslynUtils.ForceSimplify(controllerRoot.NormalizeWhitespace());
                 File.WriteAllText($"{outputDir}/Controllers/{className}.cs", formatted);
             }
+        }
+
+        private string ToSafeClassName(string raw)
+        {
+            if (string.IsNullOrWhiteSpace(raw))
+                return "Default";
+
+            raw = raw.Trim();
+
+            raw = raw.Replace(".php", " Php", StringComparison.OrdinalIgnoreCase);
+            raw = raw.Replace(".asp", " Asp", StringComparison.OrdinalIgnoreCase);
+            raw = raw.Replace(".aspx", " Aspx", StringComparison.OrdinalIgnoreCase);
+
+            raw = System.Text.RegularExpressions.Regex
+                .Replace(raw, @"[^a-zA-Z0-9]+", " ");
+
+            var parts = raw
+                .Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+            var result = string.Concat(parts.Select(x =>
+                char.ToUpperInvariant(x[0]) + x.Substring(1)));
+
+            if (string.IsNullOrWhiteSpace(result))
+                result = "Default";
+
+            if (char.IsDigit(result[0]))
+                result = "_" + result;
+
+            return result;
         }
 
         private AttributeListSyntax NormalizeAttributes(MethodDeclarationSyntax method, string group)

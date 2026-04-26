@@ -18,7 +18,7 @@ namespace Dotnetify.Processors.PackageResolve
 
         public async Task ProcessAsync(DotnetifyContext context)
         {
-            var projectDir = Path.Combine(context.OutputPath, "GeneratedApi");
+            var projectDir = Path.Combine(context.OutputPath, context.ProjectName);
             var projectFile = Directory
                 .GetFiles(projectDir, "*.csproj", SearchOption.TopDirectoryOnly)
                 .FirstOrDefault();

@@ -67,14 +67,16 @@ Runnable .NET Backend
 Output:
 
 ```text
-GeneratedApi/
+ProjectName/
  ├── Controllers/
  ├── Models/
  ├── Enums/
  ├── Common/
  ├── Program.cs
- ├── GeneratedApi.csproj
+ ├── ProjectName.csproj
 ```
+
+By default, `ProjectName` is `GeneratedApi`. You can override it with `--name`.
 
 ---
 
@@ -90,6 +92,7 @@ GeneratedApi/
 | Build Ready       | Produces compilable .NET project            |
 | Run Ready         | Can start generated API instantly           |
 | Swagger UI        | Generated server exposes Swagger portal     |
+| Custom Name       | Generates project folders and files with a custom project name |
 | Roslyn Processing | Cleans and restructures generated code      |
 
 ---
@@ -130,6 +133,24 @@ Generate and run:
 
 ```bash
 Dotnetify.exe generate Input\swagger.json --run
+```
+
+Generate with a custom project name:
+
+```bash
+Dotnetify.exe generate Input\swagger.json --name MyApi
+```
+
+Generate with a custom project name and run it immediately:
+
+```bash
+Dotnetify.exe generate Input\swagger.json --name MyApi --run
+```
+
+This creates:
+
+```text
+Output/MyApi/MyApi.csproj
 ```
 
 Example output:

@@ -67,14 +67,16 @@ Roslyn обработка
 Результат:
 
 ```text
-GeneratedApi/
+ProjectName/
  ├── Controllers/
  ├── Models/
  ├── Enums/
  ├── Common/
  ├── Program.cs
- ├── GeneratedApi.csproj
+ ├── ProjectName.csproj
 ```
+
+По умолчанию `ProjectName` равен `GeneratedApi`. Его можно изменить через `--name`.
 
 ---
 
@@ -90,6 +92,7 @@ GeneratedApi/
 | Build Ready       | Проект готов к сборке                           |
 | Run Ready         | Проект можно сразу запускать                    |
 | Swagger UI        | Генерируемый сервер поднимает Swagger портал    |
+| Custom Name       | Можно задать имя проекта, папки и `.csproj` через `--name` |
 | Roslyn Processing | Очистка и реструктуризация кода                 |
 
 ---
@@ -130,6 +133,24 @@ cd app\Dotnetify\bin\Debug\net8.0
 
 ```bash
 Dotnetify.exe generate Input\swagger.json --run
+```
+
+Сгенерировать проект с собственным именем:
+
+```bash
+Dotnetify.exe generate Input\swagger.json --name MyApi
+```
+
+Сгенерировать проект с собственным именем и сразу запустить:
+
+```bash
+Dotnetify.exe generate Input\swagger.json --name MyApi --run
+```
+
+Будет создано:
+
+```text
+Output/MyApi/MyApi.csproj
 ```
 
 Пример вывода:

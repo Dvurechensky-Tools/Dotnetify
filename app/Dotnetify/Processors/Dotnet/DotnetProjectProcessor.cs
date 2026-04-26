@@ -17,11 +17,11 @@ namespace Dotnetify.Processors.Dotnet
 
         public Task ProcessAsync(DotnetifyContext context)
         {
-            var projectDir = Path.Combine(context.OutputPath, "GeneratedApi");
+            var projectDir = Path.Combine(context.OutputPath, context.ProjectName);
 
             var generator = new DotnetProjectGenerator();
 
-            generator.Generate(projectDir, "GeneratedApi");
+            generator.Generate(projectDir, context.ProjectName);
             generator.GenerateProgram(projectDir);
 
             File.WriteAllText(

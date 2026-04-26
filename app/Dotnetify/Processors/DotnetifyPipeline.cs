@@ -42,6 +42,7 @@ namespace Dotnetify.Processors
                 Document = document,
                 GeneratedCode = code,
                 OutputPath = _config.OutputPath,
+                ProjectName = _config.ProjectName,
                 Namespace = _config.Namespace
             };
 

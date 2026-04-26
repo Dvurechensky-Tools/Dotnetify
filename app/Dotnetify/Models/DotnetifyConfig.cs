@@ -15,6 +15,8 @@ namespace Dotnetify.Models
         public string InputPath { get; set; } = "Input/swagger.json";
         public string OutputPath { get; set; } = "Out";
 
+        public string ProjectName { get; set; } = "GeneratedApi";
+
         public string Namespace { get; set; } = "Generated";
 
         public bool GenerateControllers { get; set; } = true;

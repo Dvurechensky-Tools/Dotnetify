@@ -18,6 +18,8 @@ namespace Dotnetify.Processors
 
         public string OutputPath { get; set; } = "";
 
+        public string ProjectName { get; set; } = "GeneratedApi";
+
         public string Namespace { get; set; } = "";
 
         public Dictionary<string, object> Items { get; } = new();

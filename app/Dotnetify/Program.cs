@@ -17,7 +17,7 @@ using Dotnetify.Processors.Roslyn;
 if (args.Length < 2)
 {
     Console.WriteLine("Usage:");
-    Console.WriteLine("dotnetify generate swagger.json [--run]");
+    Console.WriteLine("dotnetify generate swagger.json [--name ProjectName] [--run]");
     return;
 }
 
@@ -26,6 +26,27 @@ var command = args[0];
 if (command == "generate")
 {
     var input = args[1];
+    string projectName = "GeneratedApi";
+    for (int i = 2; i < args.Length; i++)
+    {
+        if (args[i].Equals("--name", StringComparison.OrdinalIgnoreCase))
+        {
+            if (i + 1 >= args.Length || args[i + 1].StartsWith("--"))
+            {
+                Console.WriteLine("Project name is required after --name.");
+                return;
+            }
+
+            projectName = args[i + 1];
+            i++;
+        }
+    }
+
+    if (!IsValidProjectName(projectName))
+    {
+        Console.WriteLine("Project name must be a valid C# namespace and file name.");
+        return;
+    }
 
     var runAfterBuild = args.Any(x =>
         x.Equals("--run", StringComparison.OrdinalIgnoreCase));
@@ -34,7 +55,8 @@ if (command == "generate")
     {
         InputPath = input,
         OutputPath = "Output",
-        Namespace = "GeneratedApi",
+        ProjectName = projectName,
+        Namespace = projectName,
         Processors = new()
         {
             new RoslynSplitProcessor(),
@@ -53,13 +75,13 @@ if (command == "generate")
     {
         var outputDir = Path.GetFullPath(Path.Combine(
             config.OutputPath,
-            "GeneratedApi",
+            $"{projectName}",
             "bin",
             "Debug",
             "net8.0"));
 
-        var exePath = Path.Combine(outputDir, "GeneratedApi.exe");
-        var dllPath = Path.Combine(outputDir, "GeneratedApi.dll");
+        var exePath = Path.Combine(outputDir, $"{projectName}.exe");
+        var dllPath = Path.Combine(outputDir, $"{projectName}.dll");
 
         // Проверка уже запущенного процесса
         var alreadyRunning = Process
@@ -69,7 +91,7 @@ if (command == "generate")
                 try
                 {
                     return p.ProcessName.Equals(
-                        "GeneratedApi",
+                        $"{projectName}",
                         StringComparison.OrdinalIgnoreCase);
                 }
                 catch
@@ -80,7 +102,7 @@ if (command == "generate")
 
         if (alreadyRunning)
         {
-            Console.WriteLine("GeneratedApi is already running.");
+            Console.WriteLine($"{projectName} is already running.");
             Console.WriteLine("Swagger: http://localhost:5000/swagger");
             return;
         }
@@ -129,6 +151,30 @@ if (command == "generate")
 }
 
 Console.WriteLine($"Unknown command: {command}");
+
+static bool IsValidProjectName(string projectName)
+{
+    if (string.IsNullOrWhiteSpace(projectName))
+        return false;
+
+    if (projectName.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
+        return false;
+
+    return projectName
+        .Split('.')
+        .All(IsValidIdentifier);
+}
+
+static bool IsValidIdentifier(string value)
+{
+    if (string.IsNullOrWhiteSpace(value))
+        return false;
+
+    if (value[0] != '_' && !char.IsLetter(value[0]))
+        return false;
+
+    return value.All(c => c == '_' || char.IsLetterOrDigit(c));
+}
 
 //using Dotnetify.Models;
 //using Dotnetify.Processors;
