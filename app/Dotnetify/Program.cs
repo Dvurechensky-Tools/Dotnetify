@@ -29,6 +29,7 @@ if (command == "generate")
     // positional input plus optional flags, then delegated to the processor pipeline.
     var input = args[1];
     string projectName = "GeneratedApi";
+    int port = 5000;
     for (int i = 2; i < args.Length; i++)
     {
         if (args[i].Equals("--name", StringComparison.OrdinalIgnoreCase))
@@ -40,6 +41,19 @@ if (command == "generate")
             }
 
             projectName = args[i + 1];
+            i++;
+        }
+        else if (args[i].Equals("--port", StringComparison.OrdinalIgnoreCase))
+        {
+            if (i + 1 >= args.Length ||
+                args[i + 1].StartsWith("--") ||
+                !int.TryParse(args[i + 1], out port) ||
+                port is < 1 or > 65535)
+            {
+                Console.WriteLine("Invalid port");
+                return;
+            }
+
             i++;
         }
     }
@@ -86,6 +100,8 @@ if (command == "generate")
 
         var exePath = Path.Combine(outputDir, $"{projectName}.exe");
         var dllPath = Path.Combine(outputDir, $"{projectName}.dll");
+        var serverUrl = $"http://localhost:{port}";
+        var swaggerUrl = $"{serverUrl}/swagger";
 
         // Проверка уже запущенного процесса
         var alreadyRunning = Process
@@ -107,7 +123,7 @@ if (command == "generate")
         if (alreadyRunning)
         {
             Console.WriteLine($"{projectName} is already running.");
-            Console.WriteLine("Swagger: http://localhost:5000/swagger");
+            Console.WriteLine($"Swagger: {swaggerUrl}");
             return;
         }
 
@@ -120,6 +136,7 @@ if (command == "generate")
             process = Process.Start(new ProcessStartInfo
             {
                 FileName = exePath,
+                Arguments = $"--urls={serverUrl}",
                 WorkingDirectory = outputDir,
                 UseShellExecute = true
             });
@@ -129,7 +146,7 @@ if (command == "generate")
             process = Process.Start(new ProcessStartInfo
             {
                 FileName = "dotnet",
-                Arguments = $"\"{dllPath}\"",
+                Arguments = $"\"{dllPath}\" --urls={serverUrl}",
                 WorkingDirectory = outputDir,
                 UseShellExecute = true
             });
@@ -143,7 +160,7 @@ if (command == "generate")
         if (process != null)
         {
             Console.WriteLine($"Started PID: {process.Id}");
-            Console.WriteLine("Swagger: http://localhost:5000/swagger");
+            Console.WriteLine($"Swagger: {swaggerUrl}");
         }
         else
         {

@@ -99,6 +99,7 @@ By default, `ProjectName` is `GeneratedApi`. You can override it with `--name`.
 | Run Ready         | Can start generated API instantly                              |
 | Swagger UI        | Generated server exposes Swagger portal                        |
 | Custom Name       | Generates project folders and files with a custom project name |
+| Custom Port       | Runs generated API on a selected HTTP port with `--port`       |
 | Roslyn Processing | Cleans and restructures generated code                         |
 
 ---
@@ -153,6 +154,14 @@ Generate with a custom project name and run it immediately:
 Dotnetify.exe generate Input\swagger.json --name MyApi --run
 ```
 
+Generate, run, and bind the generated API to a custom HTTP port:
+
+```bash
+Dotnetify.exe generate Input\swagger.json --name MyApi --run --port 5103
+```
+
+If `--port` is not provided, Dotnetify uses port `5000`.
+
 This creates:
 
 ```text
@@ -170,8 +179,14 @@ Generation complete.
 Starting server...
 Started PID: 29296
 
-Swagger:
-http://localhost:5000/swagger
+Swagger: http://localhost:5000/swagger
+```
+
+With a custom port:
+
+```text
+Started PID: 29296
+Swagger: http://localhost:5103/swagger
 ```
 
 ---

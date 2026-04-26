@@ -99,6 +99,7 @@ ProjectName/
 | Run Ready         | Проект можно сразу запускать                               |
 | Swagger UI        | Генерируемый сервер поднимает Swagger портал               |
 | Custom Name       | Можно задать имя проекта, папки и `.csproj` через `--name` |
+| Custom Port       | Можно запустить API на выбранном HTTP-порту через `--port` |
 | Roslyn Processing | Очистка и реструктуризация кода                            |
 
 ---
@@ -153,6 +154,14 @@ Dotnetify.exe generate Input\swagger.json --name MyApi
 Dotnetify.exe generate Input\swagger.json --name MyApi --run
 ```
 
+Сгенерировать, запустить и указать собственный HTTP-порт:
+
+```bash
+Dotnetify.exe generate Input\swagger.json --name MyApi --run --port 5103
+```
+
+Если `--port` не указан, Dotnetify использует порт `5000`.
+
 Будет создано:
 
 ```text
@@ -170,8 +179,14 @@ Generation complete.
 Starting server...
 Started PID: 29296
 
-Swagger:
-http://localhost:5000/swagger
+Swagger: http://localhost:5000/swagger
+```
+
+С собственным портом:
+
+```text
+Started PID: 29296
+Swagger: http://localhost:5103/swagger
 ```
 
 ---
