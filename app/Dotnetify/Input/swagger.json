@@ -30,6 +30,10 @@
 				"description": "Find out more about our store",
 				"url": "http://swagger.io"
 			}
+		},
+		{
+			"name": "cases",
+			"description": "Dotnetify coverage cases for parameters, responses, routes, models, and HTTP verbs"
 		}
 	],
 	"schemes": ["https", "http"],
@@ -567,6 +571,230 @@
 				"parameters": [],
 				"responses": { "default": { "description": "successful operation" } }
 			}
+		},
+		"/": {
+			"get": {
+				"tags": ["cases"],
+				"summary": "Root endpoint",
+				"operationId": "getRoot",
+				"produces": ["application/json"],
+				"parameters": [],
+				"responses": {
+					"200": {
+						"description": "root response",
+						"schema": { "$ref": "#/definitions/StatusEnvelope" }
+					}
+				}
+			}
+		},
+		"/cases/primitives": {
+			"get": {
+				"tags": ["cases"],
+				"summary": "Primitive parameter and response coverage",
+				"operationId": "getPrimitiveCases",
+				"produces": ["application/json"],
+				"parameters": [
+					{ "name": "stringValue", "in": "query", "required": true, "type": "string", "minLength": 1, "maxLength": 64 },
+					{ "name": "intValue", "in": "query", "required": true, "type": "integer", "format": "int32", "minimum": 1, "maximum": 100 },
+					{ "name": "longValue", "in": "query", "required": true, "type": "integer", "format": "int64" },
+					{ "name": "floatValue", "in": "query", "required": false, "type": "number", "format": "float" },
+					{ "name": "doubleValue", "in": "query", "required": false, "type": "number", "format": "double" },
+					{ "name": "boolValue", "in": "query", "required": false, "type": "boolean" },
+					{ "name": "dateValue", "in": "query", "required": false, "type": "string", "format": "date" },
+					{ "name": "dateTimeValue", "in": "query", "required": false, "type": "string", "format": "date-time" },
+					{ "name": "uuidValue", "in": "query", "required": false, "type": "string", "format": "uuid" },
+					{ "name": "X-Correlation-Id", "in": "header", "required": false, "type": "string" }
+				],
+				"responses": {
+					"200": {
+						"description": "primitive response",
+						"schema": { "$ref": "#/definitions/PrimitiveCase" }
+					}
+				}
+			}
+		},
+		"/cases/arrays": {
+			"get": {
+				"tags": ["cases"],
+				"summary": "Array query parameter coverage",
+				"operationId": "getArrayCases",
+				"produces": ["application/json"],
+				"parameters": [
+					{ "name": "ids", "in": "query", "required": true, "type": "array", "items": { "type": "integer", "format": "int64" }, "collectionFormat": "multi" },
+					{ "name": "names", "in": "query", "required": false, "type": "array", "items": { "type": "string" }, "collectionFormat": "csv" },
+					{ "name": "flags", "in": "query", "required": false, "type": "array", "items": { "type": "boolean" }, "collectionFormat": "pipes" }
+				],
+				"responses": {
+					"200": {
+						"description": "array response",
+						"schema": {
+							"type": "array",
+							"items": { "$ref": "#/definitions/PrimitiveCase" }
+						}
+					}
+				}
+			}
+		},
+		"/cases/dictionary": {
+			"get": {
+				"tags": ["cases"],
+				"summary": "Dictionary response coverage",
+				"operationId": "getDictionaryCase",
+				"produces": ["application/json"],
+				"parameters": [],
+				"responses": {
+					"200": {
+						"description": "dictionary response",
+						"schema": {
+							"type": "object",
+							"additionalProperties": { "$ref": "#/definitions/PrimitiveCase" }
+						}
+					}
+				}
+			}
+		},
+		"/cases/nested": {
+			"post": {
+				"tags": ["cases"],
+				"summary": "Nested request body coverage",
+				"operationId": "createNestedCase",
+				"consumes": ["application/json"],
+				"produces": ["application/json"],
+				"parameters": [
+					{
+						"name": "body",
+						"in": "body",
+						"required": true,
+						"schema": { "$ref": "#/definitions/ComplexCase" }
+					}
+				],
+				"responses": {
+					"201": {
+						"description": "created nested response",
+						"schema": { "$ref": "#/definitions/ComplexCase" }
+					}
+				}
+			}
+		},
+		"/cases/form": {
+			"post": {
+				"tags": ["cases"],
+				"summary": "Form urlencoded coverage",
+				"operationId": "submitFormCase",
+				"consumes": ["application/x-www-form-urlencoded"],
+				"produces": ["application/json"],
+				"parameters": [
+					{ "name": "name", "in": "formData", "required": true, "type": "string" },
+					{ "name": "count", "in": "formData", "required": false, "type": "integer", "format": "int32" },
+					{ "name": "enabled", "in": "formData", "required": false, "type": "boolean" }
+				],
+				"responses": {
+					"200": {
+						"description": "form response",
+						"schema": { "$ref": "#/definitions/StatusEnvelope" }
+					}
+				}
+			}
+		},
+		"/cases/upload": {
+			"post": {
+				"tags": ["cases"],
+				"summary": "Multipart upload coverage",
+				"operationId": "uploadCaseFile",
+				"consumes": ["multipart/form-data"],
+				"produces": ["application/json"],
+				"parameters": [
+					{ "name": "description", "in": "formData", "required": false, "type": "string" },
+					{ "name": "file", "in": "formData", "required": true, "type": "file" }
+				],
+				"responses": {
+					"200": {
+						"description": "upload response",
+						"schema": { "$ref": "#/definitions/StatusEnvelope" }
+					}
+				}
+			}
+		},
+		"/cases/{caseId}/children/{childId}": {
+			"patch": {
+				"tags": ["cases"],
+				"summary": "Nested path and patch coverage",
+				"operationId": "patchChildCase",
+				"consumes": ["application/json"],
+				"produces": ["application/json"],
+				"parameters": [
+					{ "name": "caseId", "in": "path", "required": true, "type": "string" },
+					{ "name": "childId", "in": "path", "required": true, "type": "integer", "format": "int64" },
+					{ "name": "If-Match", "in": "header", "required": false, "type": "string" },
+					{
+						"name": "body",
+						"in": "body",
+						"required": true,
+						"schema": { "$ref": "#/definitions/PatchCase" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "patched child",
+						"schema": { "$ref": "#/definitions/ChildCase" }
+					}
+				}
+			},
+			"options": {
+				"tags": ["cases"],
+				"summary": "Options coverage",
+				"operationId": "optionsChildCase",
+				"produces": ["application/json"],
+				"parameters": [
+					{ "name": "caseId", "in": "path", "required": true, "type": "string" },
+					{ "name": "childId", "in": "path", "required": true, "type": "integer", "format": "int64" }
+				],
+				"responses": {
+					"200": { "description": "options response" }
+				}
+			},
+			"head": {
+				"tags": ["cases"],
+				"summary": "Head coverage",
+				"operationId": "headChildCase",
+				"parameters": [
+					{ "name": "caseId", "in": "path", "required": true, "type": "string" },
+					{ "name": "childId", "in": "path", "required": true, "type": "integer", "format": "int64" }
+				],
+				"responses": {
+					"200": { "description": "head response" }
+				}
+			}
+		},
+		"/cases/no-content/{caseId}": {
+			"delete": {
+				"tags": ["cases"],
+				"summary": "No content response coverage",
+				"operationId": "deleteCaseNoContent",
+				"parameters": [
+					{ "name": "caseId", "in": "path", "required": true, "type": "string" }
+				],
+				"responses": {
+					"204": { "description": "deleted" }
+				}
+			}
+		},
+		"/cases/inheritance/{caseId}": {
+			"get": {
+				"tags": ["cases"],
+				"summary": "allOf inheritance coverage",
+				"operationId": "getDerivedCase",
+				"produces": ["application/json"],
+				"parameters": [
+					{ "name": "caseId", "in": "path", "required": true, "type": "string" }
+				],
+				"responses": {
+					"200": {
+						"description": "derived response",
+						"schema": { "$ref": "#/definitions/DerivedCase" }
+					}
+				}
+			}
 		}
 	},
 	"securityDefinitions": {
@@ -664,6 +892,114 @@
 				}
 			},
 			"xml": { "name": "User" }
+		},
+		"StatusEnvelope": {
+			"type": "object",
+			"required": ["success", "message"],
+			"properties": {
+				"success": { "type": "boolean" },
+				"message": { "type": "string" },
+				"traceId": { "type": "string", "format": "uuid" },
+				"timestamp": { "type": "string", "format": "date-time" }
+			},
+			"additionalProperties": { "type": "object" }
+		},
+		"PrimitiveCase": {
+			"type": "object",
+			"required": ["name", "count", "enabled"],
+			"properties": {
+				"name": { "type": "string", "minLength": 1, "maxLength": 64 },
+				"count": { "type": "integer", "format": "int32", "minimum": 0 },
+				"longCount": { "type": "integer", "format": "int64" },
+				"ratio": { "type": "number", "format": "float" },
+				"price": { "type": "number", "format": "double" },
+				"enabled": { "type": "boolean" },
+				"createdOn": { "type": "string", "format": "date" },
+				"updatedAt": { "type": "string", "format": "date-time" },
+				"externalId": { "type": "string", "format": "uuid" },
+				"status": {
+					"type": "string",
+					"enum": ["draft", "active", "archived"]
+				}
+			}
+		},
+		"ChildCase": {
+			"type": "object",
+			"required": ["id", "label"],
+			"properties": {
+				"id": { "type": "integer", "format": "int64" },
+				"label": { "type": "string" },
+				"score": { "type": "number", "format": "double" },
+				"metadata": {
+					"type": "object",
+					"additionalProperties": { "type": "string" }
+				}
+			}
+		},
+		"ComplexCase": {
+			"type": "object",
+			"required": ["id", "primitive", "children"],
+			"properties": {
+				"id": { "type": "string" },
+				"primitive": { "$ref": "#/definitions/PrimitiveCase" },
+				"children": {
+					"type": "array",
+					"items": { "$ref": "#/definitions/ChildCase" }
+				},
+				"matrix": {
+					"type": "array",
+					"items": {
+						"type": "array",
+						"items": { "type": "integer", "format": "int32" }
+					}
+				},
+				"tagsByCategory": {
+					"type": "object",
+					"additionalProperties": {
+						"type": "array",
+						"items": { "type": "string" }
+					}
+				},
+				"lookup": {
+					"type": "object",
+					"additionalProperties": { "$ref": "#/definitions/ChildCase" }
+				}
+			}
+		},
+		"PatchCase": {
+			"type": "object",
+			"properties": {
+				"displayName": { "type": "string" },
+				"enabled": { "type": "boolean" },
+				"labels": {
+					"type": "array",
+					"items": { "type": "string" }
+				}
+			}
+		},
+		"BaseCase": {
+			"type": "object",
+			"required": ["id"],
+			"properties": {
+				"id": { "type": "string" },
+				"createdAt": { "type": "string", "format": "date-time" }
+			}
+		},
+		"DerivedCase": {
+			"allOf": [
+				{ "$ref": "#/definitions/BaseCase" },
+				{
+					"type": "object",
+					"required": ["kind"],
+					"properties": {
+						"kind": {
+							"type": "string",
+							"enum": ["alpha", "beta", "gamma"]
+						},
+						"payload": { "$ref": "#/definitions/ComplexCase" }
+					}
+				}
+			]
 		}
 	},
 	"externalDocs": {

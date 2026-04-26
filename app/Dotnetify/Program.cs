@@ -25,6 +25,8 @@ var command = args[0];
 
 if (command == "generate")
 {
+    // The CLI intentionally stays lightweight for now: generation is driven by
+    // positional input plus optional flags, then delegated to the processor pipeline.
     var input = args[1];
     string projectName = "GeneratedApi";
     for (int i = 2; i < args.Length; i++)
@@ -73,6 +75,8 @@ if (command == "generate")
 
     if (runAfterBuild)
     {
+        // --run starts the freshly built API if it is not already running. This keeps
+        // the default generate command non-interactive while preserving a fast demo path.
         var outputDir = Path.GetFullPath(Path.Combine(
             config.OutputPath,
             $"{projectName}",
@@ -154,6 +158,8 @@ Console.WriteLine($"Unknown command: {command}");
 
 static bool IsValidProjectName(string projectName)
 {
+    // The project name is used as a folder, assembly name, and C# namespace, so validate
+    // against the strictest shared contract instead of fixing it later in the pipeline.
     if (string.IsNullOrWhiteSpace(projectName))
         return false;
 

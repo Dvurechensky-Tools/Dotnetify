@@ -1,6 +1,12 @@
 <div align="center">
 
+<div align="center">
+
+<img src="media/ico.ico" width="96" height="96" alt="Dotnetify Logo" />
+
 # Dotnetify
+
+</div>
 
 ### Turn any OpenAPI (`swagger.json`) file into a runnable C# (.NET) backend project in seconds.
 
@@ -82,18 +88,18 @@ By default, `ProjectName` is `GeneratedApi`. You can override it with `--name`.
 
 ## Features
 
-| Category          | Description                                 |
-| ----------------- | ------------------------------------------- |
-| OpenAPI Import    | Reads `swagger.json` specifications         |
-| Controllers       | Generates API controllers by route groups   |
-| Models            | Generates DTO / entity classes              |
-| Enums             | Generates enums from schema definitions     |
-| Mock Responses    | Auto-generates test responses for endpoints |
-| Build Ready       | Produces compilable .NET project            |
-| Run Ready         | Can start generated API instantly           |
-| Swagger UI        | Generated server exposes Swagger portal     |
+| Category          | Description                                                    |
+| ----------------- | -------------------------------------------------------------- |
+| OpenAPI Import    | Reads `swagger.json` specifications                            |
+| Controllers       | Generates API controllers by route groups                      |
+| Models            | Generates DTO / entity classes                                 |
+| Enums             | Generates enums from schema definitions                        |
+| Mock Responses    | Auto-generates test responses for endpoints                    |
+| Build Ready       | Produces compilable .NET project                               |
+| Run Ready         | Can start generated API instantly                              |
+| Swagger UI        | Generated server exposes Swagger portal                        |
 | Custom Name       | Generates project folders and files with a custom project name |
-| Roslyn Processing | Cleans and restructures generated code      |
+| Roslyn Processing | Cleans and restructures generated code                         |
 
 ---
 

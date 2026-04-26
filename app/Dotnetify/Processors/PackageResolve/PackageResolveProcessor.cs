@@ -12,10 +12,16 @@ using Dotnetify.Processors.PackageResolve.Core;
 
 namespace Dotnetify.Processors.PackageResolve
 {
+    /// <summary>
+    /// Builds the generated project and attempts to patch missing package references
+    /// discovered from compiler diagnostics.
+    /// </summary>
     public class PackageResolveProcessor : IDotnetifyProcessor
     {
+        /// <inheritdoc />
         public string Name => "Package Resolve Processor";
 
+        /// <summary>Locates the generated .csproj and runs the package resolve loop.</summary>
         public async Task ProcessAsync(DotnetifyContext context)
         {
             var projectDir = Path.Combine(context.OutputPath, context.ProjectName);

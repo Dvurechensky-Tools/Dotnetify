@@ -10,12 +10,14 @@ using System.Text.RegularExpressions;
 
 namespace Dotnetify.Processors.PackageResolve.Core
 {
+    /// <summary>Classifies compiler diagnostics that can be mapped to missing packages.</summary>
     public enum MissingReferenceKind
     {
         TypeOrNamespace,
         NamespaceMember
     }
 
+    /// <summary>Represents one unresolved type or namespace member reported by the compiler.</summary>
     public class MissingReference
     {
         public MissingReferenceKind Kind { get; init; }
@@ -23,6 +25,9 @@ namespace Dotnetify.Processors.PackageResolve.Core
         public string? ParentNamespace { get; init; }
     }
 
+    /// <summary>
+    /// Extracts missing type and namespace diagnostics from dotnet build output.
+    /// </summary>
     public class BuildErrorParser
     {
         // CS0246: The type or namespace name 'JsonPropertyAttribute' could not be found...
@@ -35,6 +40,7 @@ namespace Dotnetify.Processors.PackageResolve.Core
             @"error\s+CS0234:.*?'(?<member>[^']+)'\s+does not exist in the namespace\s+'(?<parent>[^']+)'",
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
+        /// <summary>Returns unique missing references found in compiler output.</summary>
         public List<MissingReference> ParseMissingReferences(string buildOutput)
         {
             var result = new List<MissingReference>();

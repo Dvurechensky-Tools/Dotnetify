@@ -8,8 +8,13 @@
 
 namespace Dotnetify.Processors.Dotnet.Core
 {
+    /// <summary>
+    /// Writes the baseline ASP.NET Core host files that make generated controllers
+    /// immediately buildable and runnable.
+    /// </summary>
     public class DotnetProjectGenerator
     {
+        /// <summary>Creates the generated project's .csproj file.</summary>
         public void Generate(string outputDir, string projectName)
         {
             var csproj = $@"
@@ -35,6 +40,7 @@ namespace Dotnetify.Processors.Dotnet.Core
             );
         }
 
+        /// <summary>Creates a minimal Program.cs with controllers and Swagger UI enabled.</summary>
         public void GenerateProgram(string outputDir)
         {
             var code = @"

@@ -10,22 +10,34 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Dotnetify.Processors.Roslyn.Core
 {
+    /// <summary>
+    /// Produces deterministic mock response expressions for generated controller bodies.
+    /// The output is intentionally simple but must always compile for supported schema types.
+    /// </summary>
     public class ResponseObjectGenerator
     {
         private readonly Dictionary<string, ClassDeclarationSyntax> _models;
 
+        /// <summary>
+        /// Creates a response generator with access to model declarations for object initializers.
+        /// </summary>
         public ResponseObjectGenerator(
             Dictionary<string, ClassDeclarationSyntax> models)
         {
             _models = models;
         }
 
+        /// <summary>
+        /// Generates a C# expression that can be assigned to or returned as the requested type.
+        /// </summary>
         public string Generate(
             string type,
             int depth = 0)
         {
             type = Normalize(type);
 
+            // Stop recursive object graphs from exploding the generated controller body.
+            // The fallback still compiles and clearly signals an intentionally shallow mock.
             if (depth > 2)
                 return "default!";
 
@@ -37,6 +49,11 @@ namespace Dotnetify.Processors.Roslyn.Core
 
             if (IsInteger(type))
                 return "1";
+
+            // C# treats 1.0 as double. Float DTO fields need the suffix to keep the
+            // generated project compiling without casts.
+            if (IsFloat(type))
+                return "1.0f";
 
             if (IsDecimal(type))
                 return "1.0";
@@ -52,6 +69,8 @@ namespace Dotnetify.Processors.Roslyn.Core
 
             if (IsDictionary(type, out var keyType, out var valueType))
             {
+                // Dictionaries are seeded with one predictable entry so Swagger calls
+                // return useful sample JSON instead of empty objects.
                 return
                     $"new Dictionary<{keyType}, {valueType}> " +
                     $"{{ {{ {Generate(keyType, depth + 1)}, {Generate(valueType, depth + 1)} }} }}";
@@ -59,6 +78,8 @@ namespace Dotnetify.Processors.Roslyn.Core
 
             if (IsCollection(type, out var innerType))
             {
+                // Lists mirror the dictionary behavior: one representative item keeps
+                // generated endpoints practical for frontend and QA smoke tests.
                 return
                     $"new List<{innerType}> " +
                     $"{{ {Generate(innerType, depth + 1)} }}";
@@ -159,8 +180,12 @@ $@"new {typeName}
         private bool IsDecimal(string type)
         {
             return type == "double" ||
-                   type == "float" ||
                    type == "decimal";
+        }
+
+        private bool IsFloat(string type)
+        {
+            return type == "float";
         }
 
         private bool IsBoolean(string type)

@@ -14,13 +14,22 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Dotnetify.Processors.Roslyn
 {
+    /// <summary>
+    /// Splits NSwag's single generated C# file into Dotnetify's project layout:
+    /// controllers, models, enums, and common helper types.
+    /// </summary>
     public class RoslynSplitProcessor : IDotnetifyProcessor
     {
+        /// <inheritdoc />
         public string Name => "Roslyn Split Processor";
 
         private ControllerLogic _controller;
         private ModelLogic _model;
 
+        /// <summary>
+        /// Builds model lookup metadata, initializes Roslyn writers, and emits files
+        /// under the generated project directory.
+        /// </summary>
         public Task ProcessAsync(DotnetifyContext context)
         {
             var root = CSharpSyntaxTree
@@ -57,6 +66,9 @@ namespace Dotnetify.Processors.Roslyn
             return Task.CompletedTask;
         }
 
+        /// <summary>
+        /// Writes controller, model, enum, and common files from the raw compilation unit.
+        /// </summary>
         public void Process(CompilationUnitSyntax root, string outputDir)
         {
             Directory.CreateDirectory(outputDir);

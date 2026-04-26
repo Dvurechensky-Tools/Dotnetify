@@ -10,6 +10,10 @@ using System.Text;
 
 namespace Dotnetify.Processors.PackageResolve.Core
 {
+    /// <summary>
+    /// Repeatedly builds the generated project, resolves missing references to NuGet
+    /// packages, and patches the .csproj until the build succeeds or the loop gives up.
+    /// </summary>
     public class PackageResolverOrchestrator
     {
         private readonly DotnetBuildRunner _buildRunner;
@@ -17,6 +21,7 @@ namespace Dotnetify.Processors.PackageResolve.Core
         private readonly NuGetPackageResolver _nugetResolver;
         private readonly CsprojEditor _csprojEditor;
 
+        /// <summary>Creates an orchestrator from independently testable package-resolve services.</summary>
         public PackageResolverOrchestrator(
             DotnetBuildRunner buildRunner,
             BuildErrorParser errorParser,
@@ -49,6 +54,9 @@ namespace Dotnetify.Processors.PackageResolve.Core
             File.AppendAllText(path, sb.ToString());
         }
 
+        /// <summary>
+        /// Runs the build/parse/resolve/patch loop for the generated project.
+        /// </summary>
         public async Task ResolveAndPatchAsync(
             string projectDir,
             string projectFile,

@@ -14,11 +14,19 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Dotnetify.Processors.Roslyn.Core
 {
+    /// <summary>
+    /// Converts NSwag abstract controller classes into concrete ASP.NET Core controllers
+    /// grouped by the first route segment.
+    /// </summary>
     public class ControllerLogic
     {
         private DotnetifyConfig Config { get; set; }
         private SyntaxBodyController BodyGenerator { get; set; }
 
+        /// <summary>
+        /// Creates controller generation logic with access to model declarations for
+        /// response body mock generation.
+        /// </summary>
         public ControllerLogic(DotnetifyConfig config,
             Dictionary<string, ClassDeclarationSyntax> models)
         {
@@ -26,12 +34,16 @@ namespace Dotnetify.Processors.Roslyn.Core
             BodyGenerator = new SyntaxBodyController(models);
         }
 
+        /// <summary>Detects NSwag controller classes by their ControllerBase inheritance.</summary>
         public bool IsController(ClassDeclarationSyntax cls)
         {
             return cls.BaseList?.Types
                 .Any(t => t.ToString().Contains("ControllerBase")) == true;
         }
 
+        /// <summary>
+        /// Emits one or more concrete controller files from an NSwag abstract controller.
+        /// </summary>
         public void Process(ClassDeclarationSyntax cls, string outputDir)
         {
             var methods = cls.Members.OfType<MethodDeclarationSyntax>();
@@ -101,6 +113,8 @@ namespace Dotnetify.Processors.Roslyn.Core
 
         private string ToSafeClassName(string raw)
         {
+            // Route segments can contain legacy suffixes, parameters, or punctuation.
+            // Normalize them into deterministic PascalCase controller class names.
             if (string.IsNullOrWhiteSpace(raw))
                 return "Default";
 
@@ -130,6 +144,8 @@ namespace Dotnetify.Processors.Roslyn.Core
 
         private AttributeListSyntax NormalizeAttributes(MethodDeclarationSyntax method, string group)
         {
+            // NSwag emits separate [Route] and [Http*] attributes on abstract methods.
+            // Concrete ASP.NET controllers are cleaner with one [Http*(relativeRoute)].
             var attrs = method.AttributeLists
                 .SelectMany(a => a.Attributes)
                 .ToList();
@@ -174,13 +190,15 @@ namespace Dotnetify.Processors.Roslyn.Core
 
         private string ExtractGroup(string? route)
         {
+            // Empty/root routes and parameter-first routes cannot produce stable
+            // controller names, so use the project namespace as the default group.
             if (string.IsNullOrWhiteSpace(route))
-                return "default";
+                return Config.Namespace;
 
             var clean = route.Trim('/');
 
             if (clean.StartsWith("{"))
-                return "default";
+                return Config.Namespace;
 
             return clean.Split('/')[0];
         }

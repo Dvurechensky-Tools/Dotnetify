@@ -10,8 +10,12 @@ using System.Xml.Linq;
 
 namespace Dotnetify.Processors.PackageResolve.Core
 {
+    /// <summary>
+    /// Performs small, structured edits to generated .csproj files.
+    /// </summary>
     public class CsprojEditor
     {
+        /// <summary>Adds missing PackageReference entries while preserving existing references.</summary>
         public void AddPackages(string projectFile, IReadOnlyCollection<ResolvedPackage> packages)
         {
             if (packages.Count == 0)

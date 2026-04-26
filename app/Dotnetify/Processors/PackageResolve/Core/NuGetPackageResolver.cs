@@ -10,6 +10,7 @@ using System.Text.Json;
 
 namespace Dotnetify.Processors.PackageResolve.Core
 {
+    /// <summary>Package candidate selected for insertion into a generated .csproj.</summary>
     public class ResolvedPackage
     {
         public string PackageId { get; init; } = string.Empty;
@@ -17,6 +18,9 @@ namespace Dotnetify.Processors.PackageResolve.Core
         public string Reason { get; init; } = string.Empty;
     }
 
+    /// <summary>
+    /// Searches NuGet for packages likely to provide a missing type or namespace.
+    /// </summary>
     public class NuGetPackageResolver
     {
         private const string ServiceIndexUrl = "https://api.nuget.org/v3/index.json";
@@ -24,11 +28,13 @@ namespace Dotnetify.Processors.PackageResolve.Core
         private readonly HttpClient _httpClient;
         private string? _searchServiceUrl;
 
+        /// <summary>Creates a resolver that uses the supplied HTTP client for NuGet V3 calls.</summary>
         public NuGetPackageResolver(HttpClient httpClient)
         {
             _httpClient = httpClient;
         }
 
+        /// <summary>Attempts to resolve a compiler missing-reference diagnostic to a package.</summary>
         public async Task<ResolvedPackage?> ResolveAsync(
             MissingReference missingReference,
             CancellationToken cancellationToken = default)

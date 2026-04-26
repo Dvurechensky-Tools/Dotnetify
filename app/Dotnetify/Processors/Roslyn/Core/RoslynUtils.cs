@@ -16,16 +16,39 @@ using Microsoft.CodeAnalysis.Text;
 
 namespace Dotnetify.Processors.Roslyn.Core
 {
+    /// <summary>
+    /// Shared Roslyn helpers for simplifying generated syntax while preserving valid
+    /// C# structure such as using directives and namespace declarations.
+    /// </summary>
     public static class RoslynUtils
     {
+        /// <summary>
+        /// Moves safe fully-qualified type references into using directives and returns
+        /// normalized source text.
+        /// </summary>
         public static string ForceSimplify(SyntaxNode root)
         {
             var namespaces = new HashSet<string>();
+
+            // Static member access (for example System.Threading.Tasks.Task.FromResult)
+            // is simplified only when the namespace is already known. This prevents
+            // accidental rewrites of ordinary chains such as client.Response.Metadata.
+            var originalUsings = root is CompilationUnitSyntax rootUnit
+                ? rootUnit.Usings
+                    .Select(u => u.Name?.ToString() ?? "")
+                    .ToHashSet(StringComparer.OrdinalIgnoreCase)
+                : new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
             var newRoot = root.ReplaceNodes(
                 root.DescendantNodes().OfType<QualifiedNameSyntax>(),
                 (node, _) =>
                 {
+                    // Using directives and namespace declarations are structural C# syntax,
+                    // not type references. Shortening them corrupts valid imports such as
+                    // Microsoft.AspNetCore.Mvc into unusable partial namespaces.
+                    if (ShouldKeepQualifiedName(node))
+                        return node;
+
                     var nsParts = new List<string>();
 
                     ExpressionSyntax current = node.Left;
@@ -49,6 +72,28 @@ namespace Dotnetify.Processors.Roslyn.Core
                     return node.Right;
                 });
 
+            newRoot = newRoot.ReplaceNodes(
+                newRoot.DescendantNodes().OfType<MemberAccessExpressionSyntax>(),
+                (node, _) =>
+                {
+                    if (!TryGetMemberAccessParts(node, out var parts) || parts.Count < 4)
+                        return node;
+
+                    var namespaceName = string.Join(".", parts.Take(parts.Count - 2));
+                    var typeName = parts[^2];
+
+                    if (!namespaces.Contains(namespaceName)
+                        && !originalUsings.Contains(namespaceName))
+                    {
+                        return node;
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(namespaceName))
+                        namespaces.Add(namespaceName);
+
+                    return node.WithExpression(SyntaxFactory.IdentifierName(typeName));
+                });
+
             var unit = (CompilationUnitSyntax)newRoot;
 
             var existing = unit.Usings
@@ -64,6 +109,8 @@ namespace Dotnetify.Processors.Roslyn.Core
 
             unit = unit.WithUsings(unit.Usings.AddRange(usings));
 
+            // NSwag sometimes emits Mvc.* aliases that are not valid standalone imports
+            // in the generated server project. Remove those after adding real namespaces.
             unit = unit.WithUsings(
                 SyntaxFactory.List(
                     unit.Usings.Where(u =>
@@ -74,9 +121,86 @@ namespace Dotnetify.Processors.Roslyn.Core
                 )
             );
 
+            unit = SimplifyNamesCoveredByUsings(unit);
+
             return unit.NormalizeWhitespace().ToFullString();
         }
 
+        private static CompilationUnitSyntax SimplifyNamesCoveredByUsings(CompilationUnitSyntax unit)
+        {
+            // A final cleanup pass catches nested generic arguments that were left
+            // fully-qualified after the first rewrite but are now covered by imports.
+            var importedNamespaces = unit.Usings
+                .Select(u => u.Name?.ToString() ?? "")
+                .Where(ns => !string.IsNullOrWhiteSpace(ns))
+                .OrderByDescending(ns => ns.Length)
+                .ToArray();
+
+            if (importedNamespaces.Length == 0)
+                return unit;
+
+            return unit.ReplaceNodes(
+                unit.DescendantNodes().OfType<QualifiedNameSyntax>(),
+                (node, _) =>
+                {
+                    if (ShouldKeepQualifiedName(node))
+                        return node;
+
+                    var name = node.ToString();
+                    var importedNamespace = importedNamespaces
+                        .FirstOrDefault(ns =>
+                            name.StartsWith(ns + ".", StringComparison.Ordinal));
+
+                    if (importedNamespace is null)
+                        return node;
+
+                    var shortName = name.Substring(importedNamespace.Length + 1);
+
+                    return SyntaxFactory
+                        .ParseName(shortName)
+                        .WithTriviaFrom(node);
+                });
+        }
+
+        private static bool ShouldKeepQualifiedName(QualifiedNameSyntax node)
+        {
+            // Parent-qualified nodes are handled by their outermost QualifiedNameSyntax.
+            // Rewriting inner segments first would add incomplete imports like
+            // System.Collections instead of System.Collections.Generic.
+            return node.Ancestors().Any(a => a is UsingDirectiveSyntax)
+                || node.Parent is NamespaceDeclarationSyntax namespaceDeclaration
+                    && namespaceDeclaration.Name == node
+                || node.Parent is FileScopedNamespaceDeclarationSyntax fileScopedNamespaceDeclaration
+                    && fileScopedNamespaceDeclaration.Name == node
+                || node.Parent is QualifiedNameSyntax;
+        }
+
+        private static bool TryGetMemberAccessParts(
+            MemberAccessExpressionSyntax node,
+            out List<string> parts)
+        {
+            parts = new List<string>();
+            AddMemberAccessParts(node, parts);
+
+            return parts.All(part => !string.IsNullOrWhiteSpace(part));
+        }
+
+        private static void AddMemberAccessParts(ExpressionSyntax expression, List<string> parts)
+        {
+            switch (expression)
+            {
+                case MemberAccessExpressionSyntax memberAccess:
+                    AddMemberAccessParts(memberAccess.Expression, parts);
+                    parts.Add(memberAccess.Name.Identifier.Text);
+                    break;
+
+                case IdentifierNameSyntax identifier:
+                    parts.Add(identifier.Identifier.Text);
+                    break;
+            }
+        }
+
+        /// <summary>Capitalizes a route segment fallback into a safe PascalCase fragment.</summary>
         public static string Capitalize(string s)
         {
             if (string.IsNullOrEmpty(s))
@@ -85,6 +209,10 @@ namespace Dotnetify.Processors.Roslyn.Core
             return char.ToUpper(s[0]) + s.Substring(1);
         }
 
+        /// <summary>
+        /// Uses Roslyn's simplifier/formatter services for callers that need semantic
+        /// formatting instead of Dotnetify's deterministic text cleanup.
+        /// </summary>
         public static string FormatCode(SyntaxNode root)
         {
             using var workspace = new AdhocWorkspace(

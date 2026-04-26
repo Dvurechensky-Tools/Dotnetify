@@ -14,15 +14,21 @@ using NSwag.CodeGeneration.CSharp.Models;
 
 namespace Dotnetify.Processors
 {
+    /// <summary>
+    /// Coordinates the high-level generation flow: load OpenAPI, ask NSwag for raw C#,
+    /// then pass the output through Dotnetify processors.
+    /// </summary>
     public class DotnetifyPipeline
     {
         private readonly DotnetifyConfig _config;
 
+        /// <summary>Creates a pipeline configured for a single generation run.</summary>
         public DotnetifyPipeline(DotnetifyConfig config)
         {
             _config = config;
         }
 
+        /// <summary>Executes NSwag generation and all configured post-processing stages.</summary>
         public async Task RunAsync()
         {
             var document = await OpenApiDocument.FromFileAsync(_config.InputPath);

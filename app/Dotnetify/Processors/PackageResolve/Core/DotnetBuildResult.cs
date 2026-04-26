@@ -11,6 +11,7 @@ using System.Text;
 
 namespace Dotnetify.Processors.PackageResolve.Core
 {
+    /// <summary>Captures the exit code and output streams from a dotnet build invocation.</summary>
     public class DotnetBuildResult
     {
         public int ExitCode { get; init; }
@@ -18,8 +19,12 @@ namespace Dotnetify.Processors.PackageResolve.Core
         public string StdErr { get; init; } = string.Empty;
     }
 
+    /// <summary>
+    /// Runs dotnet build in a generated project directory and returns parser-friendly output.
+    /// </summary>
     public class DotnetBuildRunner
     {
+        /// <summary>Executes dotnet build with English diagnostics for stable parsing.</summary>
         public async Task<DotnetBuildResult> BuildAsync(
             string workingDirectory,
             CancellationToken cancellationToken = default)
@@ -39,10 +44,10 @@ namespace Dotnetify.Processors.PackageResolve.Core
                 StandardErrorEncoding = Encoding.UTF8
             };
 
-            // Стабильные англоязычные логи для парсинга
+            // Keep compiler diagnostics stable for BuildErrorParser across local OS languages.
             psi.Environment["DOTNET_CLI_UI_LANGUAGE"] = "en";
 
-            // Иногда помогает консольным тулзам
+            // Some console tools also inspect LANG rather than DOTNET_CLI_UI_LANGUAGE.
             psi.Environment["LANG"] = "en_US.UTF-8";
 
             using var process = new Process { StartInfo = psi };

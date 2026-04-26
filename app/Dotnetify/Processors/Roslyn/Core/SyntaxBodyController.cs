@@ -11,16 +11,22 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Dotnetify.Processors.Roslyn.Core
 {
+    /// <summary>
+    /// Builds concrete method bodies for generated controllers based on each NSwag
+    /// method's return type.
+    /// </summary>
     public class SyntaxBodyController
     {
         private readonly ResponseObjectGenerator _generator;
 
+        /// <summary>Creates a method body generator backed by model-aware response mocks.</summary>
         public SyntaxBodyController(
             Dictionary<string, ClassDeclarationSyntax> models)
         {
             _generator = new ResponseObjectGenerator(models);
         }
 
+        /// <summary>Generates a compilable block for an abstract controller method.</summary>
         public BlockSyntax GenerateBody(MethodDeclarationSyntax method)
         {
             var returnType = method.ReturnType.ToString().Trim();
@@ -103,6 +109,11 @@ return response;
             if (IsInteger(type))
                 return "1";
 
+            // Keep this in sync with ResponseObjectGenerator: float literals need the
+            // suffix or generated nullable float responses fail compilation.
+            if (IsFloat(type))
+                return "1.0f";
+
             if (IsDecimal(type))
                 return "1.0";
 
@@ -151,8 +162,12 @@ return response;
         private bool IsDecimal(string type)
         {
             return type == "double" ||
-                   type == "float" ||
                    type == "decimal";
+        }
+
+        private bool IsFloat(string type)
+        {
+            return type == "float";
         }
 
         private bool IsBoolean(string type)
