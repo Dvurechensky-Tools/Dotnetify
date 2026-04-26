@@ -60,11 +60,11 @@ var app = builder.Build();
 // Swagger JSON
 app.UseSwagger();
 
-// Swagger UI on /docs
+// Swagger UI on /swagger
 app.UseSwaggerUI(options =>
 {
     options.SwaggerEndpoint(""/swagger/v1/swagger.json"", ""Generated API v1"");
-    options.RoutePrefix = ""docs"";
+    options.RoutePrefix = ""swagger"";
     options.DocumentTitle = ""Dotnetify Docs"";
 });
 
@@ -73,15 +73,16 @@ app.UseRouting();
 
 app.MapControllers();
 
-// Redirect root -> docs
-app.MapGet(""/"", () => Results.Redirect(""/docs""));
+// Redirect root -> swagger
+app.MapGet(""/"", () => Results.Redirect(""/swagger""));
 
 // Auto-open browser after startup
 app.Lifetime.ApplicationStarted.Register(() =>
 {
     try
     {
-        var url = ""http://localhost:5000/docs"";
+        var serverUrl = app.Urls.FirstOrDefault() ?? ""http://localhost:5000"";
+        var url = $""{serverUrl.TrimEnd('/')}/swagger"";
 
         Process.Start(new ProcessStartInfo
         {

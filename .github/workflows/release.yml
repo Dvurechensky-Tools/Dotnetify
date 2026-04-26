@@ -1,0 +1,125 @@
+name: Dotnetify Release Build
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build ${{ matrix.rid }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - rid: win-x64
+            os: windows-latest
+            ext: zip
+
+          - rid: linux-x64
+            os: ubuntu-latest
+            ext: tar.gz
+
+          - rid: linux-arm64
+            os: ubuntu-latest
+            ext: tar.gz
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore
+        run: dotnet restore app/Dotnetify/Dotnetify.csproj
+
+      - name: Test
+        run: dotnet test app/Dotnetify.Tests/Dotnetify.Tests.csproj --no-restore -c Release
+
+      - name: Publish
+        run: >
+          dotnet publish app/Dotnetify/Dotnetify.csproj
+          -c Release
+          -r ${{ matrix.rid }}
+          --self-contained true
+          -p:PublishSingleFile=true
+          -p:IncludeNativeLibrariesForSelfExtract=true
+          -p:DebugType=None
+          -p:DebugSymbols=false
+          -o publish/${{ matrix.rid }}
+
+      - name: Pack Windows
+        if: matrix.ext == 'zip'
+        shell: pwsh
+        run: |
+          Compress-Archive `
+            -Path publish/${{ matrix.rid }}/* `
+            -DestinationPath Dotnetify-${{ github.ref_name }}-${{ matrix.rid }}.zip
+
+      - name: Pack Linux
+        if: matrix.ext == 'tar.gz'
+        run: |
+          tar -czf Dotnetify-${{ github.ref_name }}-${{ matrix.rid }}.tar.gz -C publish/${{ matrix.rid }} .
+
+      - name: Upload Asset
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          body: |
+            ## Dotnetify ${{ github.ref_name }}
+
+            Swagger to runnable .NET mock servers.
+
+            Swagger в готовые запускаемые .NET mock server проекты.
+
+            ---
+
+            ### Included in this release
+
+            - Windows build
+            - Linux x64 build
+            - Linux ARM64 build
+            - Automated tests passed
+            - Self-contained single-file binaries
+
+            ### Что входит в релиз
+
+            - Сборка для Windows
+            - Сборка для Linux x64
+            - Сборка для Linux ARM64
+            - Автоматические тесты пройдены
+            - Самодостаточные single-file бинарники
+
+            ---
+
+            ### Usage
+
+            Windows:
+
+            Dotnetify.exe generate swagger.json --run
+
+            Linux:
+
+            chmod +x Dotnetify
+            ./Dotnetify generate swagger.json --run
+
+            ### Использование
+
+            Windows:
+
+            Dotnetify.exe generate swagger.json --run
+
+            Linux:
+
+            chmod +x Dotnetify
+            ./Dotnetify generate swagger.json --run
+          files: |
+            Dotnetify-${{ github.ref_name }}-${{ matrix.rid }}.${{ matrix.ext }}
