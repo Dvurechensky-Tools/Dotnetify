@@ -7,6 +7,7 @@
 # or wget:
 # wget --no-check-certificate http://gist.githubusercontent.com/kmorcinek/2710267/raw/.gitignore
 docs/MY_COMMANDS.md
+docs/PUSH_RELEASE.md
 pre_commit.log
 pre_commit.ps1
 
