@@ -75,10 +75,11 @@ namespace Dotnetify.Processors.Roslyn.Core
 
                 var writer = new StringWriter();
 
-                writer.WriteLine($"using {Config.Namespace};");
                 writer.WriteLine("using Microsoft.AspNetCore.Mvc;");
                 writer.WriteLine();
-                writer.WriteLine($"[ApiController]");
+                writer.WriteLine($"namespace {Config.Namespace};");
+                writer.WriteLine();
+                writer.WriteLine("[ApiController]");
                 writer.WriteLine($"[Route(\"{group.Key}\")]");
                 writer.WriteLine($"public class {className} : ControllerBase");
                 writer.WriteLine("{");

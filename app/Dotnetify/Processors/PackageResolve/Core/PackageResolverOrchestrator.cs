@@ -64,6 +64,7 @@ namespace Dotnetify.Processors.PackageResolve.Core
             CancellationToken cancellationToken = default)
         {
             var alreadyAdded = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var reservedPackageIds = _csprojEditor.GetReservedPackageIds(projectFile);
 
             for (int i = 0; i < maxIterations; i++)
             {
@@ -84,13 +85,17 @@ namespace Dotnetify.Processors.PackageResolve.Core
 
                 foreach (var missing in missingRefs)
                 {
-                    var result = await _nugetResolver.ResolveAsync(missing, cancellationToken);
+                    var result = await _nugetResolver.ResolveAsync(
+                        missing,
+                        reservedPackageIds,
+                        cancellationToken);
                     if (result is null)
                         continue;
 
                     if (alreadyAdded.Add(result.PackageId))
                     {
                         resolvedPackages.Add(result);
+                        reservedPackageIds.Add(result.PackageId);
                     }
                 }
 

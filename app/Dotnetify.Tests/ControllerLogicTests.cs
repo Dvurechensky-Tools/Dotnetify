@@ -62,7 +62,9 @@ public class ControllerLogicTests
 
             Assert.Contains("using System.Collections.Generic;", generated);
             Assert.Contains("public Task<IDictionary<string, int>> GetInventory()", generated);
+            Assert.Contains("namespace CleanCheckApi;", generated);
             Assert.DoesNotContain("System.Collections.Generic.IDictionary", generated);
+            Assert.DoesNotContain("using CleanCheckApi;", generated);
         }
         finally
         {

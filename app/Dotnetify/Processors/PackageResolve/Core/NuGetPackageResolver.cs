@@ -37,13 +37,17 @@ namespace Dotnetify.Processors.PackageResolve.Core
         /// <summary>Attempts to resolve a compiler missing-reference diagnostic to a package.</summary>
         public async Task<ResolvedPackage?> ResolveAsync(
             MissingReference missingReference,
+            IEnumerable<string>? excludedPackageIds = null,
             CancellationToken cancellationToken = default)
         {
             var candidates = BuildQueries(missingReference);
+            var excluded = excludedPackageIds is null
+                ? new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+                : new HashSet<string>(excludedPackageIds, StringComparer.OrdinalIgnoreCase);
 
             foreach (var query in candidates)
             {
-                var package = await SearchPackageAsync(query, cancellationToken);
+                var package = await SearchPackageAsync(query, excluded, cancellationToken);
                 if (package is not null)
                     return package;
             }
@@ -73,6 +77,7 @@ namespace Dotnetify.Processors.PackageResolve.Core
 
         private async Task<ResolvedPackage?> SearchPackageAsync(
             string query,
+            ISet<string> excludedPackageIds,
             CancellationToken cancellationToken)
         {
             var searchUrl = await GetSearchServiceUrlAsync(cancellationToken);
@@ -98,6 +103,9 @@ namespace Dotnetify.Processors.PackageResolve.Core
                     : 0;
 
                 if (string.IsNullOrWhiteSpace(id) || string.IsNullOrWhiteSpace(version))
+                    continue;
+
+                if (excludedPackageIds.Contains(id))
                     continue;
 
                 var score = ScorePackage(id!, query);

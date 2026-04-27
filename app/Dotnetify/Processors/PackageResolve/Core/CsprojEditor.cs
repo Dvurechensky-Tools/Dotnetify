@@ -15,6 +15,36 @@ namespace Dotnetify.Processors.PackageResolve.Core
     /// </summary>
     public class CsprojEditor
     {
+        /// <summary>
+        /// Returns package ids that would create a self-reference if inserted into the project.
+        /// </summary>
+        public ISet<string> GetReservedPackageIds(string projectFile)
+        {
+            var ids = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            {
+                Path.GetFileNameWithoutExtension(projectFile)
+            };
+
+            var doc = XDocument.Load(projectFile);
+            var project = doc.Root;
+
+            if (project is null)
+                return ids;
+
+            foreach (var elementName in new[] { "AssemblyName", "PackageId" })
+            {
+                var value = project
+                    .Descendants(elementName)
+                    .Select(x => x.Value?.Trim())
+                    .FirstOrDefault(x => !string.IsNullOrWhiteSpace(x));
+
+                if (!string.IsNullOrWhiteSpace(value))
+                    ids.Add(value);
+            }
+
+            return ids;
+        }
+
         /// <summary>Adds missing PackageReference entries while preserving existing references.</summary>
         public void AddPackages(string projectFile, IReadOnlyCollection<ResolvedPackage> packages)
         {
@@ -23,12 +53,15 @@ namespace Dotnetify.Processors.PackageResolve.Core
 
             var doc = XDocument.Load(projectFile);
             var project = doc.Root ?? throw new InvalidOperationException("Invalid .csproj");
+            var reserved = GetReservedPackageIds(projectFile);
 
             var existing = project
                 .Descendants("PackageReference")
                 .Select(x => x.Attribute("Include")?.Value)
                 .Where(x => !string.IsNullOrWhiteSpace(x))
                 .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+            existing.UnionWith(reserved);
 
             var itemGroup = project.Elements("ItemGroup")
                 .FirstOrDefault(g => g.Elements("PackageReference").Any());
