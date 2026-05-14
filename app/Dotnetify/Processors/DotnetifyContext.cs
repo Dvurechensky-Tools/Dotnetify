@@ -2,8 +2,8 @@
  * Author: Nikolay Dvurechensky
  * Site: https://dvurechensky.pro/
  * Gmail: dvurechenskysoft@gmail.com
- * Last Updated: 13 мая 2026 13:36:12
- * Version: 1.0.31
+ * Last Updated: 14 мая 2026 10:56:15
+ * Version: 1.0.32
  */
 
 using NSwag;
