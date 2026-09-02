@@ -2,8 +2,8 @@
  * Author: Nikolay Dvurechensky
  * Site: https://dvurechensky.pro/
  * Gmail: dvurechenskysoft@gmail.com
- * Last Updated: 01 сентября 2026 08:54:08
- * Version: 1.0.139
+ * Last Updated: 02 сентября 2026 07:18:54
+ * Version: 1.0.140
  */
 
 namespace Dotnetify.Processors.Dotnet.Core
