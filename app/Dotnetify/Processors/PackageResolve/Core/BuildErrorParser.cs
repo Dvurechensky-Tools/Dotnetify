@@ -2,8 +2,8 @@
  * Author: Nikolay Dvurechensky
  * Site: https://dvurechensky.pro/
  * Gmail: dvurechenskysoft@gmail.com
- * Last Updated: 07 сентября 2026 08:22:20
- * Version: 1.0.145
+ * Last Updated: 08 сентября 2026 06:57:56
+ * Version: 1.0.146
  */
 
 using System.Text.RegularExpressions;
